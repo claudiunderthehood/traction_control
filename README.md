@@ -1,6 +1,3 @@
-
----
-
 # Traction Control Simulation
 
 This repository demonstrates a simple **traction control** simulation using C++ and [SDL2](https://www.libsdl.org/) for visualization. The project models a vehicle with four wheels, each of which can experience **slip** if the wheel’s angular velocity diverges from the vehicle’s linear speed. A **TractionControl** system then attempts to keep the slip ratio within a desired range by adjusting brake torque or drive torque. I'm not very good at visualisation so sorry if it is not the best. The code is commented allowing everyone to change the parameters.
@@ -34,54 +31,54 @@ This simulation is intentionally **simplified** but illustrates the core ideas o
 
 1. **Net Force & Acceleration**  
 
-   The sum of friction forces from all wheels determines the net force on the vehicle:
-   $$
+   The sum of friction forces from all wheels determines the net force on the vehicle:  
+   \[
    F_\text{net} = \sum_{i=1}^n F_{\text{friction},i}
-   $$
+   \]  
 
-   Then, by Newton’s second law:
-   $$
-   a = \frac{F_\text{net}}{m},
-   \quad
+   Then, by Newton’s second law:  
+   \[
+   a = \frac{F_\text{net}}{m},  
+   \quad  
    v(t+\Delta t) = v(t) + a \,\Delta t.
-   $$
+   \]
 
 2. **Slip Ratio**  
 
-   Let \(v\) be the vehicle’s linear speed (m/s) and $\omega$ the wheel’s angular velocity (rad/s). If the wheel radius is \(r\), the **wheel’s linear speed** is $\omega \, r$. The **slip ratio** is:
-   $$
+   Let \(v\) be the vehicle’s linear speed (m/s) and \(\omega\) the wheel’s angular velocity (rad/s). If the wheel radius is \(r\), the **wheel’s linear speed** is \(\omega \, r\). The **slip ratio** is:  
+   \[
    \text{slip} = \frac{\omega \, r - v}{\max(v, \epsilon)}.
-   $$
+   \]  
 
    A positive slip indicates the wheel is spinning faster than the ground speed, while a negative slip indicates it’s rotating slower (potentially locking up).
 
 3. **Friction Model**  
 
-   We use a simple exponential approach to approximate the friction coefficient $\mu$ growing with slip magnitude:
-   $$
-   \mu(\text{slip}) = \mu_\text{peak}
+   We use a simple exponential approach to approximate the friction coefficient \(\mu\) growing with slip magnitude:  
+   \[
+   \mu(\text{slip}) = \mu_\text{peak}  
        \bigl(1 - e^{-k \,\lvert\text{slip}\rvert}\bigr),
-   $$
+   \]  
    where \(k\) is a tuning constant (e.g., 10), and \(\mu_\text{peak}\) is the maximum friction coefficient.  
-   
-   The friction force from each wheel is:
-   $$
+
+   The friction force from each wheel is:  
+   \[
    F_\text{friction} = \mu(\text{slip}) \cdot N,
-   $$
+   \]  
    where \(N\) is the normal force on that wheel.
 
 4. **Wheel Dynamics**  
 
-   Each wheel has rotational inertia \(I\). Net torque:
-   $$
+   Each wheel has rotational inertia \(I\). Net torque:  
+   \[
    \tau_\text{net} = \tau_\text{drive} \;-\; \tau_\text{brake} \;-\; \tau_\text{friction},
-   $$
-   and
-   $$
-   \alpha = \frac{\tau_\text{net}}{I},
-   \quad
+   \]  
+   and  
+   \[
+   \alpha = \frac{\tau_\text{net}}{I},  
+   \quad  
    \omega(t+\Delta t) = \omega(t) + \alpha \,\Delta t.
-   $$
+   \]
 
 ---
 
