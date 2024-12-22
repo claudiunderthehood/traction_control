@@ -32,53 +32,35 @@ This simulation is intentionally **simplified** but illustrates the core ideas o
 1. **Net Force & Acceleration**  
 
    The sum of friction forces from all wheels determines the net force on the vehicle:  
-   \[
-   F_\text{net} = \sum_{i=1}^n F_{\text{friction},i}
-   \]  
+   ![\Large F_\text{net} = \sum_{i=1}^n F_{\text{friction},i}](https://latex.codecogs.com/svg.latex?\color{white}\Large&space;F_\text{net}=\sum_{i=1}^n&space;F_{\text{friction},i})  
 
    Then, by Newton’s second law:  
-   \[
-   a = \frac{F_\text{net}}{m},  
-   \quad  
-   v(t+\Delta t) = v(t) + a \,\Delta t.
-   \]
+   ![\Large a = \frac{F_\text{net}}{m}, \quad v(t+\Delta t) = v(t) + a \, \Delta t.](https://latex.codecogs.com/svg.latex?\color{white}\Large&space;a=\frac{F_\text{net}}{m},\quad&space;v(t+\Delta&space;t)=v(t)+a\,\Delta&space;t.)
 
 2. **Slip Ratio**  
 
    Let \(v\) be the vehicle’s linear speed (m/s) and \(\omega\) the wheel’s angular velocity (rad/s). If the wheel radius is \(r\), the **wheel’s linear speed** is \(\omega \, r\). The **slip ratio** is:  
-   \[
-   \text{slip} = \frac{\omega \, r - v}{\max(v, \epsilon)}.
-   \]  
+   ![\Large \text{slip} = \frac{\omega \, r - v}{\max(v, \epsilon)}](https://latex.codecogs.com/svg.latex?\color{white}\Large&space;\text{slip}=\frac{\omega\,r-v}{\max(v,\epsilon)})
 
    A positive slip indicates the wheel is spinning faster than the ground speed, while a negative slip indicates it’s rotating slower (potentially locking up).
 
 3. **Friction Model**  
 
    We use a simple exponential approach to approximate the friction coefficient \(\mu\) growing with slip magnitude:  
-   \[
-   \mu(\text{slip}) = \mu_\text{peak}  
-       \bigl(1 - e^{-k \,\lvert\text{slip}\rvert}\bigr),
-   \]  
-   where \(k\) is a tuning constant (e.g., 10), and \(\mu_\text{peak}\) is the maximum friction coefficient.  
+   ![\Large \mu(\text{slip}) = \mu_\text{peak} \bigl(1 - e^{-k \, \lvert\text{slip}\rvert}\bigr)](https://latex.codecogs.com/svg.latex?\color{white}\Large&space;\mu(\text{slip})=\mu_\text{peak}\bigl(1-e^{-k\,\lvert\text{slip}\rvert}\bigr))
 
    The friction force from each wheel is:  
-   \[
-   F_\text{friction} = \mu(\text{slip}) \cdot N,
-   \]  
+   ![\Large F_\text{friction} = \mu(\text{slip}) \cdot N](https://latex.codecogs.com/svg.latex?\color{white}\Large&space;F_\text{friction}=\mu(\text{slip})\cdot&space;N)
+
    where \(N\) is the normal force on that wheel.
 
 4. **Wheel Dynamics**  
 
    Each wheel has rotational inertia \(I\). Net torque:  
-   \[
-   \tau_\text{net} = \tau_\text{drive} \;-\; \tau_\text{brake} \;-\; \tau_\text{friction},
-   \]  
+   ![\Large \tau_\text{net} = \tau_\text{drive} - \tau_\text{brake} - \tau_\text{friction}](https://latex.codecogs.com/svg.latex?\color{white}\Large&space;\tau_\text{net}=\tau_\text{drive}-\tau_\text{brake}-\tau_\text{friction})  
+
    and  
-   \[
-   \alpha = \frac{\tau_\text{net}}{I},  
-   \quad  
-   \omega(t+\Delta t) = \omega(t) + \alpha \,\Delta t.
-   \]
+   ![\Large \alpha = \frac{\tau_\text{net}}{I}, \quad \omega(t+\Delta t) = \omega(t) + \alpha \, \Delta t.](https://latex.codecogs.com/svg.latex?\color{white}\Large&space;\alpha=\frac{\tau_\text{net}}{I},\quad\omega(t+\Delta&space;t)=\omega(t)+\alpha\,\Delta&space;t.)
 
 ---
 
