@@ -1,6 +1,6 @@
 # Traction Control Simulation
 
-This repository demonstrates a simple **traction control** simulation using C++ and [SDL2](https://www.libsdl.org/) for visualization. The project models a vehicle with four wheels, each of which can experience **slip** if the wheel’s angular velocity diverges from the vehicle’s linear speed. A **TractionControl** system then attempts to keep the slip ratio within a desired range by adjusting brake torque or drive torque. I'm not very good at visualisation so sorry if it is not the best. The code is commented allowing everyone to change the parameters.
+This repository demonstrates a simple **traction control** simulation using C++, SDL for visualization and libtorch. The project offers two kinds of emulation. The first one models a vehicle with four wheels, each of which can experience **slip** if the wheel’s angular velocity diverges from the vehicle’s linear speed. A **TractionControl** system then attempts to keep the slip ratio within a desired range by adjusting brake torque or drive torque. The second one offers a **traction control simulation powered by a ML model** trained to predict best brake and drive torque to reduce wheels slip. I'm not very good at visualization, so sorry if it is not the best. The code is commented, allowing everyone to change the parameters.
 
 ## Features
 
@@ -22,6 +22,11 @@ This repository demonstrates a simple **traction control** simulation using C++ 
 
 4. **Fixed-Timestep Physics**  
    - A stable loop that updates physics at 100 Hz, then renders at ~30 FPS for smoother visuals.
+
+5. **AI-Enhanced Traction Control**  
+   - Uses a **Multi-Layer Perceptron (MLP)** trained with PyTorch to optimize slip ratio control.  
+   - The MLP replaces the manual control logic, dynamically predicting optimal brake and drive torque values.  
+   - Integration of AI models through [libtorch](https://pytorch.org/cppdocs/).
 
 ---
 
@@ -64,43 +69,79 @@ This simulation is intentionally **simplified** but illustrates the core ideas o
 
 ---
 
-## Building
+## AI Integration
 
-This project uses [CMake](https://cmake.org/) and depends on **SDL2**. The folder structure is something like:
+### **Dataset Generation Criteria**
+The training dataset for the AI model was generated using a simulated vehicle under various conditions which were taken from the standard emulation:
+1. **Input Parameters**:
+   - Wheel slip ratios ranging from \(-0.5\) to \(0.5\).
+   - Vehicle linear speeds between \(0\) m/s and \(30\) m/s.
+   - Brake and drive torque values sampled uniformly from \(0\) to \(1000\) Nm.
+2. **Output Labels**:
+   - Optimal brake and drive torques calculated to maintain a slip ratio between \(-0.1\) and \(0.1\).
+
+The data has been cleansed and new features have been created to better help the model catch patterns between the data. See ```data_analysis.ipynb```.
+
+### **Model Used**
+- **Architecture**: Multi-Layer Perceptron (MLP) using Linear Regressor.
+  - Input: [Slip Ratio, Vehicle Speed]
+  - Hidden Layers: Two layers with 128 neurons each, using ReLU activation.
+  - Output: [Brake Torque, Drive Torque]
+- **Training**: Performed in Python using PyTorch.
+  - Loss Function: Mean Squared Error (MSE)
+  - Optimizer: Adam
+  - Epochs: 50
+
+After the training and evaluation phase, the model has been tested with unseen data in ```test_model.ipynb```.
+
+### **Integration**
+The trained PyTorch model was exported to the TorchScript format (`mlp_model_traced.pt`) and loaded into the simulation using **libtorch**.
+
+---
+
+## Directory Tree
 
 ```
-├── include/
-│   ├── Vehicle.h
-│   ├── TractionControl.h
-│   ├── Simulation.h
-│   ├── Visualizer.h
-├── src/
-│   ├── Vehicle.cpp
-│   ├── TractionControl.cpp
-│   ├── Simulation.cpp
-│   ├── Visualizer.cpp
-│   ├── main.cpp
-├── SDL2/
+├── ai-emulation/
+│   ├── datasets/
+│   ├── modules/
+│   ├── traction_control_model/
+│   │   ├── include/
+│   │   ├── libtorch/
+│   │   ├── SDL2/
+│   │   └── src/
+│   │       ├── CMakeLists.txt
+│   │       ├── mlp_model_traced.pt
+│   │       ├── data_analysis.ipynb
+│   │       ├── test_model.ipynb
+│   │       └── train_model.py
+├── emulation/
 │   ├── include/
-│   ├── lib/
-│   ├── SDL2.dll
-└── CMakeLists.txt
+│   ├── SDL2/
+│   └── src/
+├── .gitignore
+├── README.md
+├── requirements.txt
 ```
 
-1. **Install / Provide SDL2**  
-   - Make sure to install SDL2 with the `SDL2/` folder with headers, libraries, and `SDL2.dll`.  
-   - Adjust paths in `CMakeLists.txt` so that `SDL2_INCLUDE_DIR`, `SDL2_LIBRARY`, and `SDL2_MAIN_LIBRARY` point to your SDL2 installation.
+---
 
-2. **Configure & Build**  
+## Building the standard emulation
+
+This project uses **CMake 3.27** and depends on **SDL2**.
+
+1. **Install Dependencies**
+   - Navigate into the ```emulation``` directory, Ensure **SDL2** is properly installed and their paths are set in `CMakeLists.txt`. On Windows, put the SDL2 folder inside the emulation directory.
+
+2. **Configure & Build**
    ```bash
-   mkdir build
+   cmake . -G "Unix Makefiles" -B build -DBUILD_MAIN=ON   
    cd build
-   cmake ..
    make
    ```
    On Windows with MSYS2 or similar, the commands are similar (e.g., `mingw32-make`).
 
-3. **Run the Program**  
+3. **Run the Program**
    - On Windows:
      ```bash
      ./traction_control.exe
@@ -110,9 +151,38 @@ This project uses [CMake](https://cmake.org/) and depends on **SDL2**. The folde
      ./traction_control
      ```
 
-If you see a window with a gray rectangle (the car) and four white rectangles (the wheels) plus colored bars, everything is working!
-
 ---
+
+## Building the AI emulation
+
+This project uses **CMake 3.27** and depends on **SDL2** and **libtorch**. Pay attention that your CUDA version and libtorch version must match in order for this to properly work. Additionally, on Windows you should download Visual Studio Build Tools in order to get MSVC. The model is already inside the traction_control_model directory.
+
+1. **Install Dependencies**
+   - Navigate into the ```ai-emulation/traction_control_model``` directory, Ensure **SDL2** and **libtorch** are properly installed and their paths are set in `CMakeLists.txt`. On Windows, put the SDL2 and libtorch folders inside the transaction_control_model directory. **If you are using CUDA >= 12 then nvToolsExt will not be shipped with the CUDA Toolkit. Download CUDA 11.8, select custom installation, uncheck everything and only check NSIGHT NVTX and install it. When it finishes navigate to the NVTX installation and move nvToolsExt64_1.lib into C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/vX.Y/lib/x64/.**
+
+2. **Configure & Build on Windows**
+   ```bash
+   cmake -G "Visual Studio 17 2022" -A x64 -B build -DCMAKE_BUILD_TYPE=Release  -DCMAKE_PREFIX_PATH="C:\path\to\libtorch" -DCMAKE_GENERATOR_TOOLSET="cuda=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\vX.Y" -DCUDA_nvToolsExt_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/vX.Y/lib/x64/nvToolsExt64_1.lib" .  
+   cmake --build build --config Release  
+   ```
+
+3. **Configure & Build on Linux or macOS**
+   ```bash
+   cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_PREFIX_PATH="/path/to/libtorch"
+
+   cmake --build build  
+   ```
+
+4. **Run the Program on Windows**: Navigate into ```build/Release/``` and run the **traction_control.exe** file.
+
+
+5. **Run the Program on Linux**: Navigate into ```build``` and run:
+   ```bash
+   ./traction_control
+     ```
+---
+
 
 ## Usage
 
@@ -122,6 +192,11 @@ Once launched, a window will appear with:
 - **Wheels** (white rectangles) at each corner.  
 - **Green bar** (on the left) showing the vehicle’s linear speed.  
 - **Blue bars** (beside the green) showing each wheel’s speed.  
-- **Red bars** (on the right) showing the slip ratio for each wheel.  
+- **Red bars** (on the right) showing the slip ratio for each wheel.
+
+The standard emulation will be smoother and faster. The ai-emulation will be laggy and
+will skip some frames due to CUDA/SDL not synchronising but similarly to the 
+standard emulation, after a while the Red bars will diminish proving that the model is doing
+correct predictions.
 
 Close the window to exit.
