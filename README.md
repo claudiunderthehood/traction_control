@@ -109,19 +109,19 @@ The trained PyTorch model was exported to the TorchScript format (`mlp_model_tra
 │   │   ├── include/
 │   │   ├── libtorch/
 │   │   ├── SDL2/
-│   │   └── src/
-│   │       ├── CMakeLists.txt
-│   │       ├── mlp_model_traced.pt
-│   │       ├── data_analysis.ipynb
-│   │       ├── test_model.ipynb
-│   │       └── train_model.py
+│   │   ├── src/  
+│   │   ├── CMakeLists.txt
+│   │   └── mlp_model_traced.pt
+│   ├── data_analysis.ipynb
+│   ├── test_model.ipynb
+│   └── train_model.py
 ├── emulation/
 │   ├── include/
 │   ├── SDL2/
 │   └── src/
 ├── .gitignore
 ├── README.md
-├── requirements.txt
+└── requirements.txt
 ```
 
 ---
