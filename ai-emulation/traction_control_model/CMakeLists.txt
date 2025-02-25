@@ -3,6 +3,8 @@ project(traction_control)
 
 set(CMAKE_CXX_STANDARD 17)
 
+option(BUILD_MAIN "Build the main executable" ON)
+
 if(WIN32)
     message("Configuring for Windows (MSVC)")
 
@@ -16,7 +18,6 @@ if(WIN32)
         SDL2
         SDL2main
     )
-
 else()
     message("Configuring for Unix-based OS")
 
@@ -26,10 +27,7 @@ endif()
 
 find_package(Torch REQUIRED)
 
-
 include_directories(${CMAKE_SOURCE_DIR}/include)
-
-option(BUILD_MAIN "Build the main executable" ON)
 
 set(COMMON_SOURCES
     src/Vehicle.cpp
@@ -38,12 +36,14 @@ set(COMMON_SOURCES
     src/Visualizer.cpp
 )
 
+if(BUILD_MAIN)
     message("Building main executable")
 
     set(MAIN_SOURCES
         ${COMMON_SOURCES}
         src/main.cpp
     )
+
     add_executable(traction_control ${MAIN_SOURCES})
 
     if(WIN32)
@@ -58,13 +58,11 @@ set(COMMON_SOURCES
             ole32
             gdi32
         )
-        
         add_custom_command(TARGET traction_control POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy
                 "${SDL2_LIBRARY_DIR}/SDL2.dll"
                 $<TARGET_FILE_DIR:traction_control>
         )
-
         file(GLOB TORCH_DLLS
             "${CMAKE_PREFIX_PATH}/lib/*.dll"
         )
@@ -75,7 +73,6 @@ set(COMMON_SOURCES
                     $<TARGET_FILE_DIR:traction_control>
             )
         endforeach()
-
         add_custom_command(TARGET traction_control POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${CMAKE_SOURCE_DIR}/mlp_model_traced.pt"
@@ -98,7 +95,6 @@ else()
         src/data_generator.cpp
     )
     add_executable(data_generator ${DATA_SOURCES})
-
     if(WIN32)
         target_link_libraries(data_generator
             ${SDL2_LIBRARIES}
